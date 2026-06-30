@@ -1,0 +1,22 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=ordersdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+    ports:
+      - "5432:5432"
+
+  redis:
+    container_name: redis
+    image: redis:latest
+
+  flask:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
