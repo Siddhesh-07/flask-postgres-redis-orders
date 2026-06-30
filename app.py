@@ -1,9 +1,12 @@
 from flask import Flask, request
 import psycopg2
 from redis import Redis
+from flask_cors import CORS
 
 app = Flask(__name__)       #Initalize flask app
 redis_client = Redis(host='redis', port=6379)  # connect to redis 
+app = Flask(__name__)
+CORS(app)
 
 #connect to postgres
 conn = psycopg2.connect(

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Order System</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; background: #f4f4f4; }
+  h1 { text-align: center; }
+  .config { background: #fff; padding: 12px; border-radius: 6px; margin-bottom: 20px; }
+  .config input { width: 100%; padding: 6px; box-sizing: border-box; }
+  section { background: #fff; padding: 16px; border-radius: 6px; margin-bottom: 20px; }
+  h2 { margin-top: 0; font-size: 18px; }
+  input, button, select { padding: 8px; margin: 4px 0; }
+  input { width: 100%; box-sizing: border-box; }
+  button { background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 8px; }
+  button:hover { background: #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px; border-bottom: 1px solid #eee; font-size: 14px; }
+  .status { font-size: 13px; margin-top: 6px; }
+  .ok { color: green; }
+  .err { color: red; }
+</style>
+</head>
+<body>
+
+<h1>Order System</h1>
+
+<div class="config">
+  <label>API Base URL</label>
+  <input id="apiUrl" placeholder="http://your-ec2-ip:5000" value="http://localhost:5000">
+</div>
+
+<section>
+  <h2>Add Product</h2>
+  <input id="prodName" placeholder="Product name">
+  <input id="prodPrice" placeholder="Price" type="number">
+  <button onclick="addProduct()">Add Product</button>
+  <div id="prodStatus" class="status"></div>
+</section>
+
+<section>
+  <h2>Products</h2>
+  <button onclick="loadProducts()">Refresh Products</button>
+  <table id="productsTable">
+    <thead><tr><th>ID</th><th>Name</th><th>Price</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Place Order</h2>
+  <input id="orderProductId" placeholder="Product ID" type="number">
+  <input id="orderCustomer" placeholder="Customer name">
+  <button onclick="placeOrder()">Place Order</button>
+  <div id="orderStatus" class="status"></div>
+</section>
+
+<section>
+  <h2>Orders</h2>
+  <button onclick="loadOrders()">Refresh Orders</button>
+  <table id="ordersTable">
+    <thead><tr><th>ID</th><th>Product ID</th><th>Customer</th><th>Status</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<script>
+function apiUrl() {
+  return document.getElementById('apiUrl').value.replace(/\/$/, '');
+}
+
+async function addProduct() {
+  const name = document.getElementById('prodName').value;
+  const price = document.getElementById('prodPrice').value;
+  const statusEl = document.getElementById('prodStatus');
+  if (!name || !price) { statusEl.textContent = 'Fill both fields'; statusEl.className = 'status err'; return; }
+  try {
+    const res = await fetch(apiUrl() + '/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, price: parseFloat(price) })
+    });
+    if (!res.ok) throw new Error('Request failed: ' + res.status);
+    statusEl.textContent = 'Product added';
+    statusEl.className = 'status ok';
+    document.getElementById('prodName').value = '';
+    document.getElementById('prodPrice').value = '';
+    loadProducts();
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.className = 'status err';
+  }
+}
+
+async function loadProducts() {
+  const tbody = document.querySelector('#productsTable tbody');
+  tbody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
+  try {
+    const res = await fetch(apiUrl() + '/products');
+    const data = await res.json();
+    tbody.innerHTML = '';
+    data.products.forEach(p => {
+      tbody.innerHTML += `<tr><td>${p.id}</td><td>${p.name}</td><td>${p.price}</td></tr>`;
+    });
+    if (data.products.length === 0) tbody.innerHTML = '<tr><td colspan="3">No products yet</td></tr>';
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="3">Error loading products: ' + e.message + '</td></tr>';
+  }
+}
+
+async function placeOrder() {
+  const product_id = document.getElementById('orderProductId').value;
+  const customer_name = document.getElementById('orderCustomer').value;
+  const statusEl = document.getElementById('orderStatus');
+  if (!product_id || !customer_name) { statusEl.textContent = 'Fill both fields'; statusEl.className = 'status err'; return; }
+  try {
+    const res = await fetch(apiUrl() + '/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: parseInt(product_id), customer_name })
+    });
+    if (!res.ok) throw new Error('Request failed: ' + res.status);
+    statusEl.textContent = 'Order placed';
+    statusEl.className = 'status ok';
+    document.getElementById('orderProductId').value = '';
+    document.getElementById('orderCustomer').value = '';
+    loadOrders();
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.className = 'status err';
+  }
+}
+
+async function loadOrders() {
+  const tbody = document.querySelector('#ordersTable tbody');
+  tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+  try {
+    const res = await fetch(apiUrl() + '/orders');
+    const data = await res.json();
+    tbody.innerHTML = '';
+    data.orders.forEach(o => {
+      tbody.innerHTML += `<tr><td>${o.id}</td><td>${o.product_id}</td><td>${o.customer_name}</td><td>${o.status}</td></tr>`;
+    });
+    if (data.orders.length === 0) tbody.innerHTML = '<tr><td colspan="4">No orders yet</td></tr>';
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="4">Error loading orders: ' + e.message + '</td></tr>';
+  }
+}
+
+loadProducts();
+loadOrders();
+</script>
+
+</body>
+</html>
