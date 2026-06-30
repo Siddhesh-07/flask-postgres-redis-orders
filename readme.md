@@ -64,8 +64,18 @@ cd flask-postgres-redis-orders
 docker compose up -d --build
 ```
 
-Use curl/Postman to interact
+API available at:
+```
+http://<your-ec2-public-ip>:5000
+```
 
+### Optional: Browser UI
+
+A simple `index.html` is included — open it directly in your browser (no server needed for the page itself). Set the **API Base URL** field to `http://<your-ec2-public-ip>:5000`, then add/view products and place/view orders directly from the page.
+
+The API has CORS enabled (`flask-cors`) specifically to allow this browser-based UI to talk to it.
+
+---
 
 ## 📡 API Endpoints
 
@@ -123,9 +133,10 @@ flask-postgres-redis-orders/
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
+├── index.html
 └── README.md
 ```
 
 ---
 
-> **Tech Stack:** Python · Flask · PostgreSQL · Redis · Docker · Docker Compose · AWS EC2
+> **Tech Stack:** Python · Flask · PostgreSQL · Redis · Docker · Docker Compose · AWS EC2 · HTML/JS (UI)
